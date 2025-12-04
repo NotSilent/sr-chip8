@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use eframe::egui;
 
 #[derive(Default)]
@@ -8,6 +6,16 @@ struct App {
 }
 
 impl App {
+    const DISPLAY_WIDTH: u32 = 32;
+    const DISPLAY_HEIGHT: u32 = 64;
+
+    const DISPLAY_PIXELS: u32 = App::DISPLAY_WIDTH * App::DISPLAY_HEIGHT;
+
+    const PRESENT_SCALE: u32 = 8;
+
+    const PRESENT_WIDTH: u32 = App::DISPLAY_WIDTH * App::PRESENT_SCALE;
+    const PRESENT_HEIGHT: u32 = App::DISPLAY_HEIGHT * App::PRESENT_SCALE;
+
     fn new(creation_ctx: &eframe::CreationContext<'_>) -> Self {
         // Customize egui here with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals.
         // Restore app state using cc.storage (requires the "persistence" feature).
@@ -20,18 +28,19 @@ impl App {
     }
 
     fn create_display_image(ctx: &egui::Context) -> egui::TextureHandle {
-        let width = 64;
-        let height = 32;
-
-        // let size = width * height;
         let mut pixels = Vec::new();
 
-        for index in 0..(width * height) {
-            let brightness = (index as f32 / (width as f32 * height as f32) * 255.0) as u8;
+        for index in 0..App::DISPLAY_PIXELS {
+            let brightness = (index as f32
+                / (App::DISPLAY_WIDTH as f32 * App::DISPLAY_HEIGHT as f32)
+                * 255.0) as u8;
             pixels.push(brightness);
         }
 
-        let image = egui::ColorImage::from_gray([width, height], &pixels);
+        let image = egui::ColorImage::from_gray(
+            [App::DISPLAY_WIDTH as usize, App::DISPLAY_HEIGHT as usize],
+            &pixels,
+        );
 
         ctx.load_texture("display", image, egui::TextureOptions::LINEAR)
     }
@@ -65,7 +74,7 @@ impl eframe::App for App {
             // TODO: Create texture once before displaying
             let texture = egui::load::SizedTexture::new(
                 self.display_image.as_ref().unwrap().id(),
-                [32.0, 64.0],
+                [App::PRESENT_WIDTH as f32, App::PRESENT_HEIGHT as f32],
             );
             ui.image(egui::ImageSource::Texture(texture));
         });
